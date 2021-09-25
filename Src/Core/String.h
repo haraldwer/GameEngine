@@ -1,4 +1,6 @@
+#pragma once
 #include "List.h"
+#include <ostream>
 
 template <class ch = char>
 class String
@@ -19,12 +21,14 @@ public:
     String& Append(const ch* cstr)
     {
         Data.Insert(Data.Size(), cstr, GetCSize(cstr));
+        return *this;
     }
 
     String& Append(const String& string)
     {
         const ch* cstr = string.CStr();
         Data.Insert(Data.Size(), cstr, cstr);
+        return *this;
     }
 
     String SubStr(unsigned short index, unsigned short count) const
@@ -83,12 +87,12 @@ public:
         return Length() == 0;
     }
 
-    const ch* CStr()
+    const ch* CStr() const
     {
         return Data.RawData();
     }
 
-    ch operator[](const unsigned short index)
+    ch& operator[](const unsigned short index)
 	{
 		return Data[index];
 	}
@@ -117,6 +121,12 @@ public:
     List<ch>& RawData()
     {
         return Data;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const String& str)
+    {
+        os << str.CStr();
+        return os;
     }
 
 private:

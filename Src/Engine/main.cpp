@@ -1,18 +1,10 @@
 #include "pch.h"
-#include "../Core/List.h"
-#include "../Core/Sort.h"
-#include "../Core/String.h"
-#include <iostream>
+#include "Core/Map.h"
+#include "Core/String.h"
 
 int main()
 {
-	String str = String("Hejsan");
-	str.Append(" svejsan");
-	//Sort::Quick(str.RawData());
-
-	while(true)
-	{
-		PrintPCH();
-	}
+	Map<String<char>, int> map; 
+	map["String"] = 10;
 	return 0;
 }

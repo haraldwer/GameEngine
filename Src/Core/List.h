@@ -1,6 +1,6 @@
 #pragma once
 #include "Memory.h"
-#include "Macros.h"
+#include "Math.h"
 
 template <class T, class sT = unsigned short>
 class List
@@ -14,10 +14,12 @@ public:
 
 	}
 
-	List(sT startSize) 
+	List(sT startSize, bool fill = false) 
 	{ 
 		Data = Memory::NewArr<T>(startSize); 
 		ContainerSize = startSize; 
+		if(fill)
+			Fill();
 	}
 
 	List(const List& list) 
@@ -139,7 +141,19 @@ public:
 		return ContainerSize;
 	}
 
+	void Fill()
+	{
+		for(sT i = Count; i < ContainerSize;i++)
+			Data[i] = T();
+		Count = ContainerSize;
+	}
+
 	T* RawData()
+	{
+		return Data;
+	}
+
+	const T* RawData() const
 	{
 		return Data;
 	}

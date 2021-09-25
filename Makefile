@@ -16,7 +16,9 @@ applicationPath=$(bin)$(applicationName).exe
 # Ox = Optimization level (no optimization = 0, max optimization = 3)
 compileFlags=-g -Wall -O0 -std=c++1z
 additionalFlags=-static -static-libgcc -static-libstdc++ -pthread -DDEBUG
-flags=$(compileFlags) $(additionalFlags)
+defines=$(addprefix -D,$(file < $(src)defines.txt))
+includes=$(addprefix -I,$(file < $(src)includes.txt))
+flags=$(compileFlags) $(additionalFlags) $(defines) $(includes)
 
 # ----- Functions ------ #
 
@@ -48,7 +50,7 @@ removeDir = if exist $(1) rmdir /s /q "$(1)"
 
 compilePch = $(call compile_pch,$(call cn,$(1)))
 define compile_pch
-g++ -x c++-header -o $(src)$(1)/pch.h.gch -c $(src)$(1)/pch.h $(flags) -DBUILD_PCH
+g++ -x c++-header -o $(src)$(1)/pch.h.gch -c $(src)$(1)/pch.cpp $(flags) -DBUILD_PCH
 endef
 
 # ----- Make ------ #
@@ -58,7 +60,7 @@ all: $(applicationPath)
 # Build Exe
 $(applicationPath): $(call getDependencies,Engine) $(lib)Core.a
 	$(call compilePch,Engine)
-	g++ -o $(applicationPath) $(call filterDependencies,$^) $(flags) -DBUILD_EXE
+	g++ -o $(applicationPath) $(call filterDependencies,$^) $(flags)
 
 # Link Lib
 $(lib)Core.a: $(call getDependencies,Core)
@@ -74,13 +76,12 @@ $(bin)Core.dll: $(call getDependencies,Core)
 
 # Compile cpp
 # TODO: Get pch in here somehow...
-$(tmp)%.o: $(src)%.cpp
+$(tmp)%.o: $(src)%.cpp $(src)defines.txt $(src)includes.txt
 	$(call makeDir,$@)
 	g++ -c -o $@ $< $(flags)
 
 clean:
 	$(call removeDir,$(tmp))
 	$(call removeFile,$(bin),$(applicationName).exe)
-	$(call removeFile,$(src)Engine/,pch.h.gch)
 	$(call removeFile,$(lib),Core.a)
-	$(call removeFile,$(src)Core/,pch.h.gch)
+	$(foreach d,$(call rwildcard,$(src),*.gch),$(shell del $(call fixPath,$(d))))

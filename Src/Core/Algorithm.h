@@ -7,6 +7,8 @@ public:
     template<class T, class sT = unsigned short>
     static void Quick(List<T, sT>& list)
     {
+        if(list.Size() < 2)
+            return;
         QuickSort_Impl<T, sT>(list, 0, list.Size() - 1);
     }
 
@@ -20,11 +22,11 @@ private:
     }
     
     template <class T, class sT = unsigned short>
-    static sT Partition (List<T, sT>& arr, sT low, sT high)
+    static int Partition (List<T, sT>& arr, int low, int high)
     {
         const T pivot = arr[high];
-        sT i = (low - 1);
-        for (sT j = low; j <= high- 1; j++)
+        int i = low - 1;
+        for (int j = low; j <= high - 1; j++)
         {
             if (arr[j] <= pivot)
             {
@@ -37,11 +39,11 @@ private:
     }
 
     template<class T, class sT = unsigned short>
-    static void QuickSort_Impl(List<T, sT>& arr, sT low, sT high)
+    static void QuickSort_Impl(List<T, sT>& arr, int low, int high)
     {
         if (low < high)
         {
-            sT pi = Partition(arr, low, high);
+            int pi = Partition(arr, low, high);
             QuickSort_Impl<T, sT>(arr, low, pi - 1);
             QuickSort_Impl<T, sT>(arr, pi + 1, high);
         }
