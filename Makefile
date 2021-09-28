@@ -15,15 +15,23 @@ applicationPath=$(bin)$(applicationName).exe
 # Wall = Warning messages
 # Ox = Optimization level (no optimization = 0, max optimization = 3)
 compileFlags=-g -Wall -O0 -std=c++1z
-additionalFlags=-static -static-libgcc -static-libstdc++ -pthread -DDEBUG
-defines=$(addprefix -D,$(file < $(src)defines.txt))
-includes=$(addprefix -I,$(file < $(src)includes.txt))
-flags=$(compileFlags) $(additionalFlags) $(defines) $(includes)
+additionalFlags=-static -static-libgcc -static-libstdc++ -pthread
+flags=$(compileFlags) $(additionalFlags) 
+
+# ----- Includes, External dependencies, Defines, Pch ----- #
+
+getPch=-include $(src)$(call cn,$(1))/pch.h
+getDefines=$(addprefix -D,$(file < $(src)$(call cn,$(1))/defines.txt))
+getIncludes=$(addprefix -I,$(file < $(src)$(call cn,$(1))/includes.txt))
+getExternalDeps=$(file < $(src)$(call cn,$(1))/dependencies.txt)
 
 # ----- Functions ------ #
 
 # Clean name; Remove file endings and prefixes from name
 cn = $(subst $(bin),,$(subst $(lib),,$(subst .exe,,$(subst .dll,,$(subst .a,,$(1))))))
+
+# Get first dir
+firstDir = $(word 2,$(subst /, ,$(1)))
 
 # Find files recursively
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
@@ -33,7 +41,7 @@ getFiles = $(call rwildcard,$(src)$(1),*.cpp *.c *.h)
 getSource = $(filter %.cpp %.c, $(call getFiles,$(1)))
 getHeaders = $(filter %.h, $(call getFiles,$(1)))
 getObjects  = $(addprefix $(tmp),$(subst $(src),,$(subst .c,.o,$(subst .cpp,.o,$(call getSource,$(1))))))
-getDependencies = $(call getObjects,$(1)) $(call getHeaders,$(1))
+getDependencies = $(src)$(1)/pch.h.gch $(call getObjects,$(1)) $(call getHeaders,$(1)) 
 filterDependencies = $(filter %.o %.a,$(1))
 
 # Fix backslash for shell commands
@@ -46,42 +54,35 @@ makeDir = @echo off && if not exist "$(dir $(1))" mkdir "$(dir $(1))"
 removeFile = if exist $(1) cd $(1) && if exist $(2) del $(2)
 removeDir = if exist $(1) rmdir /s /q "$(1)"
 
-# ----- Defines ----- #
-
-compilePch = $(call compile_pch,$(call cn,$(1)))
-define compile_pch
-g++ -x c++-header -o $(src)$(1)/pch.h.gch -c $(src)$(1)/pch.cpp $(flags) -DBUILD_PCH
-endef
-
 # ----- Make ------ #
 
 all: $(applicationPath)
 
 # Build Exe
-$(applicationPath): $(call getDependencies,Engine) $(lib)Core.a
-	$(call compilePch,Engine)
-	g++ -o $(applicationPath) $(call filterDependencies,$^) $(flags)
+$(applicationPath): $(call getDependencies,Engine) $(lib)Utility.a
+	g++ -o $(applicationPath) $(call filterDependencies,$^) $(flags) $(call getDefines,Engine) $(call getIncludes,Engine) $(call getExternalDeps,Engine) 
 
 # Link Lib
-$(lib)Core.a: $(call getDependencies,Core)
+$(lib)Utility.a: $(call getDependencies,Utility)
 	$(call makeDir,$@)
-	$(call compilePch,$@)
-	ar rcs $@ $(call filterDependencies,$^)
+	ar rcs $@ $(call filterDependencies,$^) $(call getExternalDeps,$@) 
 
 # Link DLL
-$(bin)Core.dll: $(call getDependencies,Core)
+$(bin)Utility.dll: $(call getDependencies,Utility)
 	$(call makeDir,$@)
-	$(call compilePch,$@)
-	g++ -shared -o $@ $(call filterDependencies,$^) $(flags)
+	g++ -shared -o $@ $(call filterDependencies,$^) $(call getExternalDeps,$@) 
+
+# Compile pch
+$(src)%/pch.h.gch: $(src)%/pch.cpp
+	g++ -x c++-header -o $@ -c $< $(flags) $(call getDefines,$(call firstDir,$<)) $(call getIncludes,$(call firstDir,$<)) -DBUILD_PCH
 
 # Compile cpp
-# TODO: Get pch in here somehow...
-$(tmp)%.o: $(src)%.cpp $(src)defines.txt $(src)includes.txt
+$(tmp)%.o: $(src)%.cpp
 	$(call makeDir,$@)
-	g++ -c -o $@ $< $(flags)
+	g++ -c -o $@ $< $(flags) $(call getDefines,$(call firstDir,$<)) $(call getIncludes,$(call firstDir,$<))
 
 clean:
 	$(call removeDir,$(tmp))
 	$(call removeFile,$(bin),$(applicationName).exe)
-	$(call removeFile,$(lib),Core.a)
+	$(call removeFile,$(lib),Utility.a)
 	$(foreach d,$(call rwildcard,$(src),*.gch),$(shell del $(call fixPath,$(d))))

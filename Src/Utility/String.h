@@ -2,36 +2,41 @@
 #include "List.h"
 #include <ostream>
 
-template <class ch = char>
-class String
+template <class ch>
+class Str
 {
 public:
-    String();
-    String(const ch* cstr)
+    Str() {}
+
+    Str(const ch* cstr)
     {
-        Data.Clear();
         Append(cstr); 
     }
 
-    String(const String& string)
+    Str(const Str& string)
     {
         (*this) = string;
     }
     
-    String& Append(const ch* cstr)
+    ~Str()
+    {
+        Clear();
+    }
+
+    Str& Append(const ch* cstr)
     {
         Data.Insert(Data.Size(), cstr, GetCSize(cstr));
         return *this;
     }
 
-    String& Append(const String& string)
+    Str& Append(const Str& string)
     {
         const ch* cstr = string.CStr();
-        Data.Insert(Data.Size(), cstr, cstr);
+        Data.Insert(Data.Size(), cstr, GetCSize(cstr));
         return *this;
     }
 
-    String SubStr(unsigned short index, unsigned short count) const
+    Str SubStr(unsigned short index, unsigned short count) const
     {
         CHECK((index + count) < Length());
         List<ch> list(count);
@@ -39,12 +44,12 @@ public:
         return list;
     }
 
-    String Replace(const String& old, const String& replacement) const
+    Str Replace(const Str& old, const Str& replacement) const
     {
-        return String();
+        return Str();
     }
 
-    unsigned short Find(const String& string) const
+    unsigned short Find(const Str& string) const
     {
         auto hlen = Length();
         const auto nlen = string.Length();
@@ -87,6 +92,11 @@ public:
         return Length() == 0;
     }
 
+    void Clear()
+    {
+        Data.Clear();
+    }
+
     const ch* CStr() const
     {
         return Data.RawData();
@@ -102,10 +112,15 @@ public:
 		return Data[index];
 	}
 
-    String& operator=(const String& string)
+    Str& operator=(const Str& string)
 	{
 		Data = string.Data;
 		return *this;
+	}
+
+    bool operator==(const Str& string)
+	{
+		return Data == string.Data;
 	}
 
     typename List<ch>::Iterator begin()
@@ -123,7 +138,7 @@ public:
         return Data;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const String& str)
+    friend std::ostream& operator<<(std::ostream& os, const Str& str)
     {
         os << str.CStr();
         return os;
@@ -132,14 +147,17 @@ public:
 private:
     unsigned short GetCSize(const ch* cstr)
     {
-        int i = 0;
+        unsigned short i = 0;
         while(cstr[i] != '\0')
         {
              CHECK(i < 1000);
              i++;
         }
-        return i;
+        return i + 1;
     }
 
-    List<ch> Data;
+    List<ch, unsigned short> Data;
 };
+
+typedef Str<char> String;
+typedef Str<wchar_t> WString;

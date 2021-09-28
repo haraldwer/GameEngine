@@ -2,7 +2,7 @@
 #include "Memory.h"
 #include "Math.h"
 
-template <class T, class sT = unsigned short>
+template <class T, class sT = unsigned short, bool UseSafeCopy = false>
 class List
 {
 public:
@@ -38,6 +38,11 @@ public:
 	{
 		Copy(list);
 		return *this;
+	}
+
+	bool operator==(const List& list)
+	{
+		return Compare(list);
 	}
 
 	T& operator[](const sT index)
@@ -78,7 +83,7 @@ public:
 			ContainerSize = newSize;
 
 			// Copy data below index
-			if(Data)
+			if(Data && index > 0)
 				Memory::Copy(target, Data, sizeof(T) * index);
 		}
 
@@ -158,6 +163,23 @@ public:
 		return Data;
 	}
 
+	bool SafeCompare(const List& list)
+	{
+		if(list.Size() != Count)
+			return false;
+		for(sT i = 0; i < Count; i++)
+			if(list.Data[i] != Data[i])
+				return false;
+		return true;
+	}
+
+	bool Compare(const List& list)
+	{
+		if(list.Size() != Count)
+			return false;
+		return memcmp(Data, list.Data, sizeof(T) * Count) == 0;
+	}
+
 	sT FindFirst(const T& object) const
 	{
 		for(sT i = 0; i < Count; i++)
@@ -189,13 +211,14 @@ public:
 	{
 	public:
 		Iterator(T* ptr) : Ptr(ptr) {  }
+		Iterator(const Iterator& itr) : Ptr(itr.Ptr) { }
 		Iterator& operator++() 
 		{
 			Ptr++;
 			return *this;
 		}
 
-		Iterator& operator++(int) 
+		Iterator operator++(int) 
 		{
 			Iterator itr = *this;
 			++(*this);
@@ -208,7 +231,7 @@ public:
 			return *this;
 		}
 
-		Iterator& operator--(int) 
+		Iterator operator--(int) 
 		{
 			Iterator itr = *this;
 			--(*this);
@@ -241,13 +264,25 @@ private:
 		Clear();
 		if(!list.Data)
 			return;
-		(*this) = List(list.ContainerSize);
-		Memory::Copy(Data, list.Data, sizeof(T) * list.Count);
+		Data = Memory::NewArr<T>(list.ContainerSize);
+		ContainerSize = list.ContainerSize;
+		if(list.Count <= 0)
+			return;
+		if(UseSafeCopy)
+		{
+			for(sT i = 0; i < list.Count; i++)
+				Data[i] = list.Data[i];
+		}
+		else
+		{
+			Memory::Copy(Data, list.Data, sizeof(T) * list.Count);
+		}
+		Count = list.Count;
 	}
 
 	sT NewSize() const
 	{
-		return (Count + (Count / 2));
+		return MAX((Count + (Count / 2)), Count + 1);
 	}
 
 	T* Data = nullptr;

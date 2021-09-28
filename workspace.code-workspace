@@ -7,6 +7,43 @@
 	"settings": {
 		"files.associations": {
 			"iostream": "cpp"
-		}
+		},
+		"makefile.launchConfigurations": [
+			{
+				"cwd": "${workspaceFolder}\\Bin",
+				"binaryPath": "${workspaceFolder}\\Bin\\HelloWorld.exe",
+				"binaryArgs": []
+			},
+			{
+				"cwd": "f:\\Engine\\Project\\Bin",
+				"binaryPath": "f:\\Engine\\Project\\Bin\\HelloWorld.exe",
+				"binaryArgs": []
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Debug (GCC)",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder}/Bin/HelloWorld.exe",
+				"args": [],
+				"stopAtEntry": false,
+				"cwd": "${fileDirname}",
+				"environment": [],
+				"externalConsole": false,
+				"MIMode": "gdb",
+				"miDebuggerPath": "${workspaceFolder}/../Tools/mingw/mingw64/bin/gdb.exe",
+				"setupCommands": [
+					{
+						"description": "Enable pretty-printing for gdb",
+						"text": "-enable-pretty-printing",
+						"ignoreFailures": true
+					}
+				]
+			}
+		]
 	}
 }

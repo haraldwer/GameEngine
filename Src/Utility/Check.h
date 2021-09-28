@@ -6,7 +6,7 @@
 if(!(condition)) \
 { \
 	LOG("CHECK: ", (#condition)); \
-	while(true) {} \
+	while(true) { } \
 	abort(); \
 }
 #else

@@ -1,8 +1,7 @@
 #include "String.h"
 #include <cstdint>
 
-template<class T>
-uint32_t Hash(const String<T>& aKey)
+uint32_t Hash(const String& aKey)
 {
     const uint8_t* aBuffer = reinterpret_cast<const uint8_t*>(aKey.CStr());
     const int count = aKey.Length();
