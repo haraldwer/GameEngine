@@ -1,29 +1,14 @@
 #include "pch.h"
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
+#include "../Utility/Math/Matrix4x4.h"
 
-#include <iostream>
+int main() 
+{
 
-int main() {
-    Func();
+    Matrix4x4<float> matrix;
 
-    glfwInit();
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::cout << extensionCount << " extensions supported\n";
-
-    while(!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
+    matrix = Matrix4x4<float>::Transpose(matrix);
+    matrix = Matrix4x4<float>::Inverse(matrix);
+    matrix.Identity();
 
     return 0;
 }

@@ -37,4 +37,9 @@ namespace Memory
 		CHECK(size > 0  && "Invalid size");
 		memcpy(dest, src, size);
 	}
+
+	inline void Set(void* ptr, int value, size_t num)
+	{
+		memset(ptr, 0, num);
+	}
 }
